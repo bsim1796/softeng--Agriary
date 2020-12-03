@@ -1,0 +1,25 @@
+stages:
+    - build
+    - deploy
+ 
+build:
+    image: mcr.microsoft.com/dotnet/core/sdk:3.1
+    stage: build
+    script: 
+        - dotnet publish -c Release -o build ./AgriaryBackend/
+    artifacts:
+        paths:
+        - build/*
+        expire_in: 1 day
+
+deploy:
+    image: tmaier/docker-compose:18.09
+    stage: deploy
+    only:
+        - master
+    script:
+        - docker build -t $CI_REGISTRY_IMAGE .
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker push $CI_REGISTRY_IMAGE
+    tags:
+        - docker-image

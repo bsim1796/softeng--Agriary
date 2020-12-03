@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+    agriary-reverse-proxy:
+        image: r.edu.codespring.ro/agriary/agriary-compose
+        restart: always
+        network_mode: bridge
+        # ports:
+        #   - 8081:80 # for local testing only
+        links:
+          - agriary-backend:agriary-backend
+          - agriary-frontend:agriary-frontend
+        environment:
+          - VIRTUAL_HOST=agriary.test.edu.codespring.ro
+          - VIRTUAL_PORT=80
+          - LETSENCRYPT_HOST=agriary.test.edu.codespring.ro
+          - LETSENCRYPT_EMAIL=sulyok.csaba@codespring.ro
+    
+    agriary-postgres:
+        image: postgres:12.4-alpine
+        network_mode: bridge
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=admin
+            - POSTGRES_DB=postgres
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        restart: always
+
+    agriary-backend:
+        image: r.edu.codespring.ro/agriary/agriary-backend
+        network_mode: bridge
+        restart: always
+        environment:
+            - AGRIARY_DB_URL=Server=agriary-postgres;Port=5432;User Id=postgres;Password=admin;Database=postgres;Integrated Security=true;Pooling=true;
+        links:
+            - agriary-postgres:agriary-postgres
+
+    agriary-frontend:
+        image: r.edu.codespring.ro/agriary/agriary-frontend
+        network_mode: bridge
+        restart: always
+
+volumes: 
+    pgdata:
